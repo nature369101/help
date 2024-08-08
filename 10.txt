@@ -25,3 +25,89 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/mman.h>
+#include<sys/ipc.h>
+#include<sys/shm.h>
+#include<sys/wait.h>
+#include<fcntl.h>
+
+typedef struct node {
+int k;
+int arr[100];
+}a;
+
+int main (int argc, char* argv[]) {
+
+if (argc < 3) { printf("All CMDLINE ARGS not given!\n"); exit(-1); }
+
+int shmid = shm_open("PRIME",O_CREAT|O_RDWR,0666);
+ftruncate(shmid,1024);
+a* shmptr = (a*)mmap(0,1024,PROT_READ,MAP_SHARED,shmid,0);
+
+printf("[PARENT] Shared Memory attached at %p\n", shmptr);
+
+pid_t child_pid = fork();
+
+if (child_pid < 0) { exit(-1); }
+if (child_pid == 0) {
+   printf("[CHILD] Started Prime Generation...\n");
+   execlp("./primechild", "./primechild", argv[1], argv[2], NULL);
+   printf("[CHILD] Finished Generation.\n");
+   exit(0);
+}
+else {
+wait(0);
+printf("[PARENT] Child Finished. The PRIME NUMBERS are:\n");
+for (int i=0;i<shmptr->k;i++) { printf("%d ", shmptr->arr[i]); }
+}
+printf("\n");
+shm_unlink("PRIME");
+printf("[PARENT] Deleted Shared Memory Object.\n");
+
+return 0; 
+}
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<sys/wait.h>
+#include<sys/types.h>
+#include<unistd.h>
+#include<fcntl.h>
+#include<sys/mman.h>
+#include<sys/ipc.h>
+#include<sys/shm.h>
+
+typedef struct node {
+int k;
+int arr[100]; 
+}a;
+
+int main (int argc, char* argv[]) {
+
+if (argc < 3) { printf("All CMDLINE ARGS not given!\n"); exit(-1); }
+
+int m = atoi(argv[1]);
+int n = atoi(argv[2]);
+
+int shmid = shm_open("PRIME",O_RDWR,0666);
+ftruncate(shmid,1024);
+a* shmptr = (a*)mmap(0,1024,PROT_WRITE,MAP_SHARED,shmid,0);
+
+printf("[CHILD] Attached to Shared Memory at %p\n", shmptr);
+
+int j;
+shmptr->k=0;
+
+for (int i=m;i<=n;i++) {
+if (i < 2) { continue; }
+for (j=2;j<=i/2;j++) {
+if (i%j == 0) { break; }
+}
+if (j > i/2) { shmptr->arr[shmptr->k++] = i; }
+}
+return 0;
+}
