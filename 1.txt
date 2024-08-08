@@ -1,0 +1,102 @@
+#!/bin/bash
+
+# Function to check if a string is a palindrome
+is_palindrome() {
+  local str="$1"
+  local len=${#str}
+  local mid=$((len / 2))
+  local i
+
+  for ((i = 0; i < mid; i++)); do
+    if [ "${str:i:1}" != "${str:len-i-1:1}" ]; then
+      return 1
+    fi
+  done
+  return 0
+}
+
+# Read input from the user
+read -p "Enter a string: " input
+
+# Check if the input string is a palindrome
+if is_palindrome "$input"; then
+  echo "\"$input\" is a palindrome."
+else
+  echo "\"$input\" is not a palindrome."
+fi
+
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<stdbool.h>
+
+typedef struct{
+    int pid, at, bt, rt, ct, wt;
+    int tat;
+}process;
+
+typedef struct{
+     int pid, st, et;
+}ganttchart;
+
+
+void sjfpre(process *proc, int n, ganttchart *gantt,int *ganttsize){
+       int completed=0,currentTime=0;
+       int minIndex=0,runningproc=-1;
+       bool isProceessrunning=false;
+       *ganttsize=0;
+       while(completed!=n){
+        int minremainingTime=1000;
+        minIndex=-1;
+        for(int i=0;i<n;i++){
+            if(proc[i].at<=currentTime && proc[i].rt < minremainingTime && proc[i].rt >0 ){
+                minremainingTime=proc[i].rt;
+                minIndex=i;
+            }
+        }
+        if(minIndex == -1){
+            currentTime++;
+            continue;
+        }
+        if(!isProceessrunning || runningproc !=proc[minIndex].pid){
+            if(isProceessrunning){
+                gantt[*ganttsize].et=currentTime;
+                (*ganttsize)++;
+            }
+            gantt[*ganttsize].pid=proc[minIndex].pid;
+            gantt[*ganttsize].st=currentTime;
+            isProceessrunning=true;
+            runningproc=proc[minIndex].pid;
+        }
+        proc[minIndex].rt--;
+        currentTime++;
+        if(proc[minIndex].rt==0){
+            completed++;
+            proc[minIndex].ct=currentTime;
+            proc[minIndex].tat=proc[minIndex].ct-proc[minIndex].at;
+            proc[minIndex].wt=proc[minIndex].tat-proc[minIndex].bt;
+            gantt[*ganttsize].et=currentTime;
+            (*ganttsize)++;
+            isProceessrunning=false;
+        }
+       }
+}
+int main(){
+     int n;
+     printf("process");
+     scanf("%d",&n);
+     process proc[n];
+     ganttchart gantt[100];
+     int ganttsize;
+     for(int i=0;i<n;i++){
+         printf("Enter the at and bt for %d :",i+1);
+         scanf("%d%d",&proc[i].at,&proc[i].bt);
+         proc[i].pid=i+1;
+         proc[i].rt=proc[i].bt;
+     }
+     sjfpre(proc, n, gantt, &ganttsize);
+     for(int i=0;i<ganttsize;i++){
+        printf("|(%d) p%d (%d)|",gantt[i].st,gantt[i].pid,gantt[i].et);
+     }
+}
