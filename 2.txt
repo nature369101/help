@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# Function to check if a number is prime
+is_prime() {
+  local num=$1
+  if ((num <= 1)); then
+    return 1
+  fi
+  for ((i = 2; i * i <= num; i++)); do
+    if ((num % i == 0)); then
+      return 1
+    fi
+  done
+  return 0
+}
+
+# Read the range from the user
+read -p "Enter the start of the range: " start
+read -p "Enter the end of the range: " end
+
+# Print prime numbers in the given range
+echo "Prime numbers between $start and $end:"
+for ((num = start; num <= end; num++)); do
+  if is_prime $num; then
+    echo $num
+  fi
+done
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+typedef struct {
+    int pid, at, bt, rt, ct, wt, tat, priority;
+} process;
+
+typedef struct {
+    int pid, st, et;
+} ganttchart;
+
+void priorityPreemptive(process *proc, int n, ganttchart *gantt, int *ganttsize) {
+    int completed = 0, currentTime = 0;
+    int minIndex = -1, runningproc = -1;
+    bool isProcessRunning = false;
+    *ganttsize = 0;
+
+    while (completed != n) {
+        int highestPriority = 1000;
+        minIndex = -1;
+
+        for (int i = 0; i < n; i++) {
+            if (proc[i].at <= currentTime && proc[i].rt > 0 && proc[i].priority < highestPriority) {
+                highestPriority = proc[i].priority;
+                minIndex = i;
+            }
+        }
+
+        if (minIndex == -1) {
+            currentTime++;
+            continue;
+        }
+
+        if (!isProcessRunning || runningproc != proc[minIndex].pid) {
+            if (isProcessRunning) {
+                gantt[*ganttsize].et = currentTime;
+                (*ganttsize)++;
+            }
+            gantt[*ganttsize].pid = proc[minIndex].pid;
+            gantt[*ganttsize].st = currentTime;
+            isProcessRunning = true;
+            runningproc = proc[minIndex].pid;
+        }
+
+        proc[minIndex].rt--;
+        currentTime++;
+
+        if (proc[minIndex].rt == 0) {
+            completed++;
+            proc[minIndex].ct = currentTime;
+            proc[minIndex].tat = proc[minIndex].ct - proc[minIndex].at;
+            proc[minIndex].wt = proc[minIndex].tat - proc[minIndex].bt;
+            gantt[*ganttsize].et = currentTime;
+            (*ganttsize)++;
+            isProcessRunning = false;
+        }
+    }
+}
+
+int main() {
+    int n;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+    process proc[n];
+    ganttchart gantt[100];
+    int ganttsize;
+
+    for (int i = 0; i < n; i++) {
+        printf("Enter the arrival time, burst time, and priority for process %d: ", i + 1);
+        scanf("%d%d%d", &proc[i].at, &proc[i].bt, &proc[i].priority);
+        proc[i].pid = i + 1;
+        proc[i].rt = proc[i].bt;
+    }
+
+    priorityPreemptive(proc, n, gantt, &ganttsize);
+
+    printf("Gantt Chart:\n");
+    for (int i = 0; i < ganttsize; i++) {
+        printf("|(%d) p%d (%d)|", gantt[i].st, gantt[i].pid, gantt[i].et);
+    }
+    printf("\n\nProcess details:\n");
+    printf("PID\tAT\tBT\tCT\tTAT\tWT\tPriority\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\n", proc[i].pid, proc[i].at, proc[i].bt, proc[i].ct, proc[i].tat, proc[i].wt, proc[i].priority);
+    }
+
+    return 0;
+}
