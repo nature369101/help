@@ -1,0 +1,149 @@
+#!/bin/bash
+
+# Function to read a matrix
+read_matrix() {
+    local rows=$1
+    local cols=$2
+    local matrix_name=$3
+    declare -n matrix=$matrix_name
+
+    echo "Enter elements of $matrix_name matrix:"
+    for ((i = 0; i < rows; i++)); do
+        for ((j = 0; j < cols; j++)); do
+            read -p "Element [$i,$j]: " matrix[$i,$j]
+        done
+    done
+}
+
+# Function to print a matrix
+print_matrix() {
+    local rows=$1
+    local cols=$2
+    local matrix_name=$3
+    declare -n matrix=$matrix_name
+
+    echo "$matrix_name matrix:"
+    for ((i = 0; i < rows; i++)); do
+        for ((j = 0; j < cols; j++)); do
+            printf "%4d" ${matrix[$i,$j]}
+        done
+        echo
+    done
+}
+
+# Function to add two matrices
+add_matrices() {
+    local rows=$1
+    local cols=$2
+    declare -n matrix1=$3
+    declare -n matrix2=$4
+    declare -n result=$5
+
+    for ((i = 0; i < rows; i++)); do
+        for ((j = 0; j < cols; j++)); do
+            result[$i,$j]=$((matrix1[$i,$j] + matrix2[$i,$j]))
+        done
+    done
+}
+
+# Main script
+echo "Enter the number of rows:"
+read rows
+echo "Enter the number of columns:"
+read cols
+
+declare -A matrix1
+declare -A matrix2
+declare -A result
+
+read_matrix $rows $cols matrix1
+read_matrix $rows $cols matrix2
+
+add_matrices $rows $cols matrix1 matrix2
+
+echo
+print_matrix $rows $cols matrix1
+echo
+print_matrix $rows $cols matrix2
+echo
+print_matrix $rows $cols result
+
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<stdbool.h>
+
+
+typedef struct{ 
+    int pid, at, ct, bt, wt, tat, priority;
+}process;
+
+typedef struct{
+    int pid, et, st;
+}gantt;
+
+void prioritynon(process *proc, int n, gantt* ganttchart, int *ganttSize){
+     int currentTime=0, minIndex=0,completed=0;
+     bool *visited=(bool*)malloc(n*sizeof(bool));
+     for(int i=0;i<n;i++){
+        visited[i]=false;
+     }
+     while(completed!=n){
+        minIndex=-1;
+        int highestpriority=1000;
+        for(int i=0;i<n;i++){
+             if(proc[i].at<=currentTime && !visited[i] && proc[i].priority< highestpriority ){
+                minIndex=i;
+                highestpriority=proc[i].priority;
+             }
+        }
+
+        if(minIndex==-1){
+            currentTime++;
+            continue;
+        }
+        ganttchart[*ganttSize].pid=proc[minIndex].pid;
+        ganttchart[*ganttSize].st=currentTime;
+
+        currentTime+=proc[minIndex].bt;
+        proc[minIndex].ct=currentTime;
+        proc[minIndex].tat=proc[minIndex].ct-proc[minIndex].at;
+        proc[minIndex].wt=proc[minIndex].tat-proc[minIndex].bt;
+        visited[minIndex]=true;
+        ganttchart[*ganttSize].et=currentTime;
+        (*ganttSize)++;
+        completed++;
+     }
+}
+
+
+
+int main() {
+    int n;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+    process proc[n];
+    gantt ganttchart[100];
+    int ganttsize=0;
+
+    for (int i = 0; i < n; i++) {
+        printf("Enter the arrival time, burst time, and priority for process %d: ", i + 1);
+        scanf("%d%d%d", &proc[i].at, &proc[i].bt, &proc[i].priority);
+        proc[i].pid = i + 1;
+    }
+
+    prioritynon(proc, n, ganttchart, &ganttsize);
+
+    printf("Gantt Chart:\n");
+    for (int i = 0; i < ganttsize; i++) {
+        printf("|(%d) p%d (%d)|", ganttchart[i].st, ganttchart[i].pid, ganttchart[i].et);
+    }
+    printf("\n\nProcess details:\n");
+    printf("PID\tAT\tBT\tCT\tTAT\tWT\tPriority\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\n", proc[i].pid, proc[i].at, proc[i].bt, proc[i].ct, proc[i].tat, proc[i].wt, proc[i].priority);
+    }
+
+    return 0;
+}
